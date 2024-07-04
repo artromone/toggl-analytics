@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+	"net/http"
 	"os"
 	"strings"
 )
@@ -13,7 +15,7 @@ type UserCredentials struct {
 
 func GetUserCredentials(prefix string) UserCredentials {
 	return UserCredentials{
-		APIKey:      os.Getenv(prefix + "_API_KEY"),
+		APIKey:      os.Getenv(prefix + "_API_KEY"), // TODO one place
 		WorkspaceID: os.Getenv(prefix + "_WORKSPACE_ID"),
 		FileName:    os.Getenv(prefix + "_FILE_NAME"),
 	}
@@ -56,4 +58,21 @@ func GetAllUserCredentials() map[string]UserCredentials {
 	}
 
 	return users
+}
+
+func CheckCredentials(apiKey string) error {
+	method, url := http.MethodGet, "https://api.track.toggl.com/api/v9/me"
+
+	resp, err := MakeRequest(method, url, apiKey)
+	if err != nil {
+		return fmt.Errorf("error sending request: %v", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+	}
+
+	fmt.Printf("Credentials are valid.\n")
+	return nil
 }
