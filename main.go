@@ -5,6 +5,7 @@ import (
 	"github.com/joho/godotenv"
 	"log"
 	"os"
+	"strings"
 )
 
 type UserCredentials struct {
@@ -13,17 +14,62 @@ type UserCredentials struct {
 	FileName    string
 }
 
+func GetUserCredentials(prefix string) UserCredentials {
+	return UserCredentials{
+		APIKey:      os.Getenv(prefix + "_API_KEY"),
+		WorkspaceID: os.Getenv(prefix + "_WORKSPACE_ID"),
+		FileName:    os.Getenv(prefix + "_FILE_NAME"),
+	}
+}
+
+func GetAllUserCredentials() map[string]UserCredentials {
+	users := make(map[string]UserCredentials)
+
+	for _, env := range os.Environ() {
+		kv := strings.SplitN(env, "=", 2)
+		key := kv[0]
+		value := kv[1]
+
+		if !strings.HasPrefix(key, "USER") {
+			continue
+		}
+
+		parts := strings.SplitN(key, "_", 2)
+		if len(parts) != 2 {
+			continue
+		}
+
+		userPrefix := parts[0]
+		attribute := parts[1]
+
+		if _, exists := users[userPrefix]; !exists {
+			users[userPrefix] = UserCredentials{}
+		}
+
+		user := users[userPrefix]
+		switch attribute {
+		case "API_KEY":
+			user.APIKey = value
+		case "WORKSPACE_ID":
+			user.WorkspaceID = value
+		case "FILE_NAME":
+			user.FileName = value
+		}
+		users[userPrefix] = user
+	}
+
+	return users
+}
+
 func main() {
 	err := godotenv.Load(".env")
 	if err != nil {
 		log.Fatalf("Error loading .env file: %v", err)
 	}
 
-	user1 := UserCredentials{
-		APIKey:      os.Getenv("U1_API_KEY"),
-		WorkspaceID: os.Getenv("U1_WORKSPACE_ID"),
-		FileName:    os.Getenv("U1_FILE_NAME"),
-	}
+	users := GetAllUserCredentials()
 
-	fmt.Printf("User 1: %+v\n", user1)
+	for userPrefix, credentials := range users {
+		fmt.Printf("Credentials for %s: %+v\n", userPrefix, credentials)
+	}
 }
