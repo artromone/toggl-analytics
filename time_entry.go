@@ -12,12 +12,16 @@ type TimeEntry struct {
 	Description string `json:"description"`
 }
 
-func GetTimeEntry(apiKey string) error {
+func GetLastWeekTimeEntry(apiKey, dateFormat string) error {
 	thisMonday := time.Now().AddDate(0, 0, -int(time.Now().Weekday())+1)
 	lastMonday := thisMonday.AddDate(0, 0, -7)
 	lastSunday := thisMonday.AddDate(0, 0, -1)
 
-	query := fmt.Sprintf("start_date=%s&end_date=%s", lastMonday.Format("2006-01-02"), lastSunday.Format("2006-01-02"))
+	return GetTimeEntry(apiKey, lastMonday, lastSunday, dateFormat)
+}
+
+func GetTimeEntry(apiKey string, startDate, endDate time.Time, dateFormat string) error {
+	query := fmt.Sprintf("start_date=%s&end_date=%s", startDate.Format("2006-01-02"), endDate.Format("2006-01-02"))
 	url := fmt.Sprintf("https://api.track.toggl.com/api/v9/me/time_entries?%s", query)
 
 	resp, err := MakeRequest(http.MethodGet, url, apiKey)
@@ -34,13 +38,13 @@ func GetTimeEntry(apiKey string) error {
 	totalDuration := 0
 	for _, entry := range timeEntries {
 		totalDuration += entry.Duration
-		fmt.Printf("Описание задачи: %s\n", entry.Description)
+		// fmt.Printf("Task description: %s\n", entry.Description)
 	}
 
 	hours := totalDuration / 3600
 	minutes := (totalDuration % 3600) / 60
 
-	fmt.Printf("User have worked %d h %d min at previous week.\n", hours, minutes)
+	fmt.Printf("User have worked %d h %d min from %s to %s.\n", hours, minutes, startDate.Format(dateFormat), endDate.Format(dateFormat))
 
 	return nil
 }

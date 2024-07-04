@@ -73,6 +73,6 @@ func CheckCredentials(apiKey string) error {
 		return fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
 
-	fmt.Printf("Credentials are valid.\n")
+	fmt.Printf(" Credentials are valid.\n")
 	return nil
 }
