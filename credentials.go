@@ -11,6 +11,7 @@ type UserCredentials struct {
 	APIKey      string
 	WorkspaceID string
 	FileName    string
+	PayPerHour  string
 }
 
 type CredentialField int
@@ -19,10 +20,11 @@ const (
 	apiKey CredentialField = iota
 	workspaceId
 	username
+	payPerHour
 )
 
 func (d CredentialField) String() string {
-	return [...]string{"API_KEY", "WORKSPACE_ID", "USER_NAME"}[d]
+	return [...]string{"API_KEY", "WORKSPACE_ID", "USER_NAME", "PAY_PER_HOUR"}[d]
 }
 
 func GetUserCredentials(prefix string) UserCredentials {
@@ -31,6 +33,7 @@ func GetUserCredentials(prefix string) UserCredentials {
 		APIKey:      os.Getenv(prefix + apiKey.String()),
 		WorkspaceID: os.Getenv(prefix + workspaceId.String()),
 		FileName:    os.Getenv(prefix + username.String()),
+		PayPerHour:  os.Getenv(prefix + payPerHour.String()),
 	}
 }
 
@@ -66,6 +69,8 @@ func GetAllUserCredentials() map[string]UserCredentials {
 			user.WorkspaceID = value
 		case username.String():
 			user.FileName = value
+		case payPerHour.String():
+			user.PayPerHour = value
 		}
 		users[userPrefix] = user
 	}

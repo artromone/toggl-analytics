@@ -3,7 +3,9 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"math"
 	"net/http"
+	"strconv"
 	"time"
 )
 
@@ -57,15 +59,25 @@ func GetTimeEntries(table *Table, credentials *UserCredentials, startDate, endDa
 
 		clientName, err := GetClientName(entry.Workspace, clientId, credentials.APIKey)
 		if err != nil {
-			continue
+			clientName = ""
 		}
 
-		table.AddRow(credentials.FileName, startDate, float64(entry.Duration)*250/3600, clientName)
+		pay, err := strconv.ParseFloat(credentials.PayPerHour, 64)
+		if err != nil {
+			continue
+		}
+		pay *= float64(entry.Duration) / 3600
+		pay = RoundToPrecision(pay, 0)
+
+		table.AddRow(credentials.FileName, startDate, pay, clientName)
 	}
 
 	return totalDuration, nil
+}
 
-	// TODO Create data struct with all fields, fill them and keep/send
+func RoundToPrecision(value float64, precision int) float64 {
+	multiplier := math.Pow(10, float64(precision))
+	return math.Round(value*multiplier) / multiplier
 }
 
 func GetProjectClient(workspaceID, projectID int, apiKey string) (int, error) {
@@ -96,8 +108,6 @@ func GetClientName(workspaceID, clientID int, apiKey string) (string, error) {
 	if err := json.NewDecoder(resp.Body).Decode(&clientEntry); err != nil {
 		return "", err
 	}
-
-    print(clientEntry.Name)
 
 	return clientEntry.Name, nil
 }
