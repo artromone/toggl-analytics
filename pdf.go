@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/jung-kurt/gofpdf"
+	"sort"
 )
 
 func GenerateTablePdf(columns []string, rows [][]string, colWidths map[int]float64) {
@@ -24,6 +25,10 @@ func GenerateTablePdf(columns []string, rows [][]string, colWidths map[int]float
 		pdf.CellFormat(width, rowHeight, tr(col), "1", 0, "", false, 0, "")
 	}
 	pdf.Ln(rowHeight)
+
+	sort.Slice(rows, func(i, j int) bool {
+		return rows[i][0] < rows[j][0] // Sort by ID
+	})
 
 	for _, row := range rows {
 		for i, col := range row {
