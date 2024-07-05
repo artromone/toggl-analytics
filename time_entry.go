@@ -3,9 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	// "io"
 	"net/http"
-	"strconv"
 	"time"
 )
 
@@ -13,6 +11,11 @@ type TimeEntry struct {
 	Duration  int `json:"duration"`
 	Project   int `json:"project_id"`
 	Workspace int `json:"workspace_id"`
+}
+
+type ProjectEntry struct {
+	Name   string `json:"name"`
+	Client int    `json:"client_id"`
 }
 
 type ClientEntry struct {
@@ -47,26 +50,54 @@ func GetTimeEntries(table *Table, credentials *UserCredentials, startDate, endDa
 	for _, entry := range timeEntries {
 		totalDuration += entry.Duration
 
-		url :=
-			"https://api.track.toggl.com/api/v9/workspaces/" + strconv.Itoa(entry.Workspace) + "/projects/" + strconv.Itoa(entry.Project)
-
-		resp, err := MakeRequest(http.MethodGet, url, credentials.APIKey)
+		clientId, err := GetProjectClient(entry.Workspace, entry.Project, credentials.APIKey)
 		if err != nil {
-			return 0, err
-		}
-		defer resp.Body.Close()
-
-		var clientEntries ClientEntry
-		if err := json.NewDecoder(resp.Body).Decode(&clientEntries); err != nil {
-			return 0, err
+			continue
 		}
 
-		// TODO update row if project exists
+		clientName, err := GetClientName(entry.Workspace, clientId, credentials.APIKey)
+		if err != nil {
+			continue
+		}
 
-		table.AddRow(credentials.FileName, startDate, float64(entry.Duration)*250/3600, clientEntries.Name)
+		table.AddRow(credentials.FileName, startDate, float64(entry.Duration)*250/3600, clientName)
 	}
 
 	return totalDuration, nil
 
 	// TODO Create data struct with all fields, fill them and keep/send
+}
+
+func GetProjectClient(workspaceID, projectID int, apiKey string) (int, error) {
+	url := fmt.Sprintf("https://api.track.toggl.com/api/v9/workspaces/%d/projects/%d", workspaceID, projectID)
+	resp, err := MakeRequest(http.MethodGet, url, apiKey)
+	if err != nil {
+		return 0, err
+	}
+	defer resp.Body.Close()
+
+	var entry ProjectEntry
+	if err := json.NewDecoder(resp.Body).Decode(&entry); err != nil {
+		return 0, err
+	}
+
+	return entry.Client, nil
+}
+
+func GetClientName(workspaceID, clientID int, apiKey string) (string, error) {
+	url := fmt.Sprintf("https://api.track.toggl.com/api/v9/workspaces/%d/clients/%d", workspaceID, clientID)
+	resp, err := MakeRequest(http.MethodGet, url, apiKey)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	var clientEntry ClientEntry
+	if err := json.NewDecoder(resp.Body).Decode(&clientEntry); err != nil {
+		return "", err
+	}
+
+    print(clientEntry.Name)
+
+	return clientEntry.Name, nil
 }
