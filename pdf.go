@@ -5,7 +5,7 @@ import (
 	"github.com/jung-kurt/gofpdf"
 )
 
-func GenerateTablePdf(columns []string, rows [][]string) {
+func GenerateTablePdf(columns []string, rows [][]string, colWidths map[int]float64) {
 	pdf := gofpdf.New("P", "mm", "A4", "font/")
 
 	pdf.AddFont("Helvetica", "", "helvetica_1251.json")
@@ -14,16 +14,24 @@ func GenerateTablePdf(columns []string, rows [][]string) {
 
 	tr := pdf.UnicodeTranslatorFromDescriptor("cp1251")
 
-	colWidth, rowHeight := 20.0, 4.0
+	rowHeight := 4.0
 
-	for _, col := range columns {
-		pdf.CellFormat(colWidth, rowHeight, tr(col), "1", 0, "", false, 0, "")
+	for i, col := range columns {
+		width, exists := colWidths[i]
+		if !exists {
+			width = 20.0
+		}
+		pdf.CellFormat(width, rowHeight, tr(col), "1", 0, "", false, 0, "")
 	}
 	pdf.Ln(rowHeight)
 
 	for _, row := range rows {
-		for _, col := range row {
-			pdf.CellFormat(colWidth, rowHeight, tr(col), "1", 0, "", false, 0, "")
+		for i, col := range row {
+			width, exists := colWidths[i]
+			if !exists {
+				width = 20.0
+			}
+			pdf.CellFormat(width, rowHeight, tr(col), "1", 0, "", false, 0, "")
 		}
 		pdf.Ln(rowHeight)
 	}

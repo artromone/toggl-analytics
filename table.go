@@ -8,18 +8,19 @@ import (
 type TableRow map[string]interface{}
 type Table map[int]TableRow
 
-func (t Table) AddRowById(id int, user string, time time.Time, sum float64, project string) {
+func (t Table) AddRowById(id int, user string, time time.Time, sum float64, client, task string) {
 	t[id] = TableRow{
-		"User":    user,
-		"Time":    time,
-		"Sum":     sum,
-		"Project": project,
+		"User":   user,
+		"Time":   time,
+		"Sum":    sum,
+		"Client": client,
+		"Task":   task,
 	}
 }
 
-func (t Table) AddRow(user string, time time.Time, sum float64, project string) {
+func (t Table) AddRow(user string, time time.Time, sum float64, client, task string) {
 	rows, _ := t.GetDimensions()
-	t.AddRowById(rows+1, user, time, sum, project)
+	t.AddRowById(rows+1, user, time, sum, client, task)
 }
 
 func (t Table) GetDimensions() (int, int) {
@@ -55,13 +56,14 @@ func (t Table) DeleteRow(id int) {
 }
 
 func (t Table) PrintTable() {
-	fmt.Printf("%-5s %-10s %-20s %-10s %-15s\n", "ID", "User", "Time", "Sum", "Project")
+	fmt.Printf("%-5s %-10s %-20s %-10s %-15s %-15s\n", "ID", "User", "Time", "Sum", "Client", "Task")
 	for id, row := range t {
-		fmt.Printf("%-5d %-10s %-20s %-10.2f %-15s\n",
+		fmt.Printf("%-5d %-10s %-20s %-10.2f %-15s %-15s\n",
 			id,
 			row["User"].(string),
 			row["Time"].(time.Time).Format(time.RFC3339),
 			row["Sum"].(float64),
-			row["Project"].(string))
+			row["Client"].(string),
+			row["Task"].(string))
 	}
 }

@@ -41,7 +41,7 @@ func main() {
 
 	// table.PrintTable()
 
-	columns := []string{"ID", "User", "Time", "Sum", "Project"}
+	columns := []string{"ID", "User", "Time", "Sum", "Client", "Task"}
 
 	rows := [][]string{}
 	for id, row := range table {
@@ -54,17 +54,30 @@ func main() {
 			continue
 		}
 		sum, ok := row["Sum"].(float64)
+		if !ok || sum == 0 {
+			continue
+		}
+		project, ok := row["Client"].(string)
 		if !ok {
 			continue
 		}
-		project, ok := row["Project"].(string)
+		task, ok := row["Task"].(string)
 		if !ok {
 			continue
 		}
 
-		newRow := []string{fmt.Sprintf("%d", id), user, timeVal.Format("02.01.2006"), fmt.Sprintf("%.2f", sum), project}
+		newRow := []string{fmt.Sprintf("%d", id), user, timeVal.Format("02.01.2006"), fmt.Sprintf("%.2f", sum), project, task}
 		rows = append(rows, newRow)
 	}
 
-	GenerateTablePdf(columns, rows)
+	colWidths := map[int]float64{
+		0: 5.0,
+		1: 20.0,
+		2: 15.0,
+		3: 15.0,
+		4: 25.0,
+		5: 70.0,
+	}
+
+	GenerateTablePdf(columns, rows, colWidths)
 }

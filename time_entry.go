@@ -10,9 +10,10 @@ import (
 )
 
 type TimeEntry struct {
-	Duration  int `json:"duration"`
-	Project   int `json:"project_id"`
-	Workspace int `json:"workspace_id"`
+	Duration  int    `json:"duration"`
+	Project   int    `json:"project_id"`
+	Workspace int    `json:"workspace_id"`
+	Task      string `json:"description"`
 }
 
 type ProjectEntry struct {
@@ -69,7 +70,7 @@ func GetTimeEntries(table *Table, credentials *UserCredentials, startDate, endDa
 		pay *= float64(entry.Duration) / 3600
 		pay = RoundToPrecision(pay, 0)
 
-		table.AddRow(credentials.FileName, startDate, pay, clientName)
+		table.AddRow(credentials.FileName, startDate, pay, clientName, string(entry.Task))
 	}
 
 	return totalDuration, nil
