@@ -12,20 +12,20 @@ type TimeEntry struct {
 	Description string `json:"description"`
 }
 
-func GetLastWeekTimeEntries(apiKey string) (int, error) {
+func GetLastWeekTimeEntries(table *Table, credentials *UserCredentials) (int, error) {
 	thisMonday := time.Now().AddDate(0, 0, -int(time.Now().Weekday())+1)
 	lastMonday := thisMonday.AddDate(0, 0, -7)
 	lastSunday := thisMonday.AddDate(0, 0, -1)
 
-	return GetTimeEntries(apiKey, lastMonday, lastSunday)
+	return GetTimeEntries(table, credentials, lastMonday, lastSunday)
 }
 
-func GetTimeEntries(apiKey string, startDate, endDate time.Time) (int, error) {
-    // TODO one format
-	query := fmt.Sprintf("start_date=%s&end_date=%s", startDate.Format("2006-01-02"), endDate.Format("2006-01-02"))
+func GetTimeEntries(table *Table, credentials *UserCredentials, startDate, endDate time.Time) (int, error) {
+	apiDateFormat := "2006-01-02"
+	query := fmt.Sprintf("start_date=%s&end_date=%s", startDate.Format(apiDateFormat), endDate.Format(apiDateFormat))
 	url := fmt.Sprintf("https://api.track.toggl.com/api/v9/me/time_entries?%s", query)
 
-	resp, err := MakeRequest(http.MethodGet, url, apiKey)
+	resp, err := MakeRequest(http.MethodGet, url, credentials.APIKey)
 	if err != nil {
 		return 0, err
 	}
@@ -39,9 +39,13 @@ func GetTimeEntries(apiKey string, startDate, endDate time.Time) (int, error) {
 	totalDuration := 0
 	for _, entry := range timeEntries {
 		totalDuration += entry.Duration
+
+		// dateRange := startDate.Format(time.RFC3339) + " - " + endDate.Format(time.RFC3339)
+
+		table.AddRow(credentials.FileName, startDate, float64(entry.Duration)*250/3600, entry.Description)
 	}
 
-    return totalDuration, nil
+	return totalDuration, nil
 
-    // TODO Create data struct with all fields, fill them and keep/send
+	// TODO Create data struct with all fields, fill them and keep/send
 }

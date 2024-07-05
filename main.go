@@ -13,16 +13,20 @@ func main() {
 
 	for _, credentials := range users {
 		fmt.Printf("Checking credentials for %s...", credentials.FileName)
-		apiKey := credentials.APIKey
 
-		err := CheckCredentials(apiKey)
+		err := CheckCredentials(credentials.APIKey)
 		if err != nil {
 			fmt.Printf(" Error checking credentials: %v\n", err)
-			continue
+			fmt.Println("Remove or fix invalid credentials to continue.")
+			return
 		}
 		fmt.Printf(" Credentials are valid.\n")
+	}
 
-		weekTotal, err := GetLastWeekTimeEntries(apiKey)
+	table := make(Table)
+
+	for _, credentials := range users {
+		weekTotal, err := GetLastWeekTimeEntries(&table, &credentials)
 		if err != nil {
 			fmt.Printf("Error getting time entry: %v\n", err)
 			continue
@@ -33,6 +37,8 @@ func main() {
 
 		fmt.Printf("User have worked %d h %d min.\n", hours, minutes)
 	}
+
+    table.PrintTable()
 
 	// columns := []string{"ID", "User", "Time", "Sum", "Project"}
 	// rows := [][]string{
