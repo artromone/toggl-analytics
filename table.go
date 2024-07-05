@@ -18,9 +18,10 @@ func (t Table) AddRowById(id int, user string, time time.Time, sum float64, clie
 	}
 }
 
-func (t Table) AddRow(user string, time time.Time, sum float64, client, task string) {
+func (t Table) AddRow(user string, time time.Time, sum float64, client, task string) int {
 	rows, _ := t.GetDimensions()
 	t.AddRowById(rows+1, user, time, sum, client, task)
+	return rows + 1
 }
 
 func (t Table) GetDimensions() (int, int) {
@@ -36,6 +37,10 @@ func (t Table) GetDimensions() (int, int) {
 
 	return rows, columns
 }
+
+func (t Table) Get(id int, column string) interface{} {
+	return t[id][column]
+} // TODO
 
 func (t Table) UpdateRow(id int, column string, value interface{}) error {
 	row, exists := t[id]

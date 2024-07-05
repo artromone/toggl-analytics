@@ -49,6 +49,8 @@ func GetTimeEntries(table *Table, credentials *UserCredentials, startDate, endDa
 		return 0, err
 	}
 
+	tasks := make(map[string]int)
+
 	totalDuration := 0
 	for _, entry := range timeEntries {
 		totalDuration += entry.Duration
@@ -70,7 +72,12 @@ func GetTimeEntries(table *Table, credentials *UserCredentials, startDate, endDa
 		pay *= float64(entry.Duration) / 3600
 		pay = RoundToPrecision(pay, 0)
 
-		table.AddRow(credentials.FileName, startDate, pay, clientName, string(entry.Task))
+		if rowId, exists := tasks[entry.Task]; exists {
+			table.UpdateRow(rowId, "Sum", table.Get(rowId, "Sum").(float64)+pay)
+		} else {
+			rowId := table.AddRow(credentials.FileName, startDate, pay, clientName, entry.Task)
+			tasks[entry.Task] = rowId
+		}
 	}
 
 	return totalDuration, nil
