@@ -1,6 +1,9 @@
-# Ignore with no extension
+# With no extension
 *
 !/**/
 !*.*
 
 .env
+
+# Reports
+reports/

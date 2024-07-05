@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"time"
 )
 
 func main() {
@@ -38,18 +39,34 @@ func main() {
 		fmt.Printf("User have worked %d h %d min.\n", hours, minutes)
 	}
 
-    table.PrintTable()
+	table.PrintTable()
 
-	// columns := []string{"ID", "User", "Time", "Sum", "Project"}
-	// rows := [][]string{
-	// 	{"1", "John", "25", "New York"},
-	// 	{"2", "Emily", "30", "Los Angeles"},
-	// 	{"3", "Michael", "28", "Chicago"},
-	// 	{"4", "Sophia", "26", "Houston"},
-	// 	{"5", "William", "29", "Miami"},
-	// }
-	//
-	// GenerateTablePdf(columns, rows)
+	columns := []string{"ID", "User", "Time", "Sum", "Project"}
+
+    rows := [][]string{}
+	for id, row := range table {
+		user, ok := row["User"].(string)
+		if !ok {
+			continue
+		}
+		timeVal, ok := row["Time"].(time.Time)
+		if !ok {
+			continue
+		}
+		sum, ok := row["Sum"].(float64)
+		if !ok {
+			continue
+		}
+		project, ok := row["Project"].(string)
+		if !ok {
+			continue
+		}
+
+		newRow := []string{fmt.Sprintf("%d", id), user, timeVal.Format(time.RFC3339), fmt.Sprintf("%.2f", sum), project}
+		rows = append(rows, newRow)
+	}
+
+	GenerateTablePdf(columns, rows)
 
 	// TODO create pdf in pdf/ dir, gitignore
 }

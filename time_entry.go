@@ -40,9 +40,9 @@ func GetTimeEntries(table *Table, credentials *UserCredentials, startDate, endDa
 	for _, entry := range timeEntries {
 		totalDuration += entry.Duration
 
-		// dateRange := startDate.Format(time.RFC3339) + " - " + endDate.Format(time.RFC3339)
+		descriptionUTF8 := entry.Description // TODO
 
-		table.AddRow(credentials.FileName, startDate, float64(entry.Duration)*250/3600, entry.Description)
+		table.AddRow(credentials.FileName, startDate, float64(entry.Duration)*250/3600, descriptionUTF8)
 	}
 
 	return totalDuration, nil

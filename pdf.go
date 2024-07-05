@@ -24,7 +24,7 @@ func GenerateTablePdf(columns []string, rows [][]string) {
 		pdf.Ln(rowHeight)
 	}
 
-	err := pdf.OutputFileAndClose("table.pdf")
+	err := pdf.OutputFileAndClose("reports/table.pdf")
 	if err != nil {
 		fmt.Println("Error:", err)
 		return
