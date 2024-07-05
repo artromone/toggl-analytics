@@ -39,11 +39,11 @@ func main() {
 		fmt.Printf("User have worked %d h %d min.\n", hours, minutes)
 	}
 
-	table.PrintTable()
+	// table.PrintTable()
 
 	columns := []string{"ID", "User", "Time", "Sum", "Project"}
 
-    rows := [][]string{}
+	rows := [][]string{}
 	for id, row := range table {
 		user, ok := row["User"].(string)
 		if !ok {
@@ -62,11 +62,9 @@ func main() {
 			continue
 		}
 
-		newRow := []string{fmt.Sprintf("%d", id), user, timeVal.Format(time.RFC3339), fmt.Sprintf("%.2f", sum), project}
+		newRow := []string{fmt.Sprintf("%d", id), user, timeVal.Format("02.01.2006"), fmt.Sprintf("%.2f", sum), project}
 		rows = append(rows, newRow)
 	}
 
 	GenerateTablePdf(columns, rows)
-
-	// TODO create pdf in pdf/ dir, gitignore
 }
