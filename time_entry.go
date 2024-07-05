@@ -74,8 +74,9 @@ func GetTimeEntries(table *Table, credentials *UserCredentials, startDate, endDa
 
 		if rowId, exists := tasks[entry.Task]; exists {
 			table.UpdateRow(rowId, "Sum", table.Get(rowId, "Sum").(float64)+pay)
+			table.UpdateRow(rowId, "Duration", table.Get(rowId, "Duration").(int)+entry.Duration)
 		} else {
-			rowId := table.AddRow(credentials.FileName, startDate, pay, clientName, entry.Task)
+			rowId := table.AddRow(credentials.FileName, entry.Duration, pay, clientName, entry.Task)
 			tasks[entry.Task] = rowId
 		}
 	}
@@ -119,3 +120,5 @@ func GetClientName(workspaceID, clientID int, apiKey string) (string, error) {
 
 	return clientEntry.Name, nil
 }
+
+

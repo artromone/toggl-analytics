@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"time"
 )
 
 func main() {
@@ -41,7 +40,7 @@ func main() {
 
 	// table.PrintTable()
 
-	columns := []string{"ID", "User", "Time", "Sum", "Client", "Task"}
+	columns := []string{"ID", "User", "Duration", "Sum", "Client", "Task"}
 
 	rows := [][]string{}
 	for id, row := range table {
@@ -49,7 +48,7 @@ func main() {
 		if !ok {
 			continue
 		}
-		timeVal, ok := row["Time"].(time.Time)
+		duration, ok := row["Duration"].(int)
 		if !ok {
 			continue
 		}
@@ -64,9 +63,9 @@ func main() {
 		task, ok := row["Task"].(string)
 		if !ok {
 			continue
-		}
+		} // TODO link together
 
-		newRow := []string{fmt.Sprintf("%d", id), user, timeVal.Format("02.01.2006"), fmt.Sprintf("%.2f", sum), project, task}
+		newRow := []string{fmt.Sprintf("%d", id), user, DurationToHHMMSS(duration), fmt.Sprintf("%.2f", sum), project, task}
 		rows = append(rows, newRow)
 	}
 
@@ -80,4 +79,12 @@ func main() {
 	}
 
 	GenerateTablePdf(columns, rows, colWidths)
+}
+
+func DurationToHHMMSS(durationInSeconds int) string {
+	hours := durationInSeconds / 3600
+	minutes := (durationInSeconds % 3600) / 60
+	seconds := durationInSeconds % 60
+
+	return fmt.Sprintf("%02d:%02d:%02d", hours, minutes, seconds)
 }
