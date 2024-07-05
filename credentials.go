@@ -13,11 +13,24 @@ type UserCredentials struct {
 	FileName    string
 }
 
+type CredentialField int
+
+const (
+	apiKey CredentialField = iota
+	workspaceId
+	username
+)
+
+func (d CredentialField) String() string {
+	return [...]string{"API_KEY", "WORKSPACE_ID", "USER_NAME"}[d]
+}
+
 func GetUserCredentials(prefix string) UserCredentials {
+	prefix += "_"
 	return UserCredentials{
-		APIKey:      os.Getenv(prefix + "_API_KEY"), // TODO one place
-		WorkspaceID: os.Getenv(prefix + "_WORKSPACE_ID"),
-		FileName:    os.Getenv(prefix + "_FILE_NAME"),
+		APIKey:      os.Getenv(prefix + apiKey.String()),
+		WorkspaceID: os.Getenv(prefix + workspaceId.String()),
+		FileName:    os.Getenv(prefix + username.String()),
 	}
 }
 
@@ -47,11 +60,11 @@ func GetAllUserCredentials() map[string]UserCredentials {
 
 		user := users[userPrefix]
 		switch attribute {
-		case "API_KEY":
+		case apiKey.String():
 			user.APIKey = value
-		case "WORKSPACE_ID":
+		case workspaceId.String():
 			user.WorkspaceID = value
-		case "FILE_NAME":
+		case username.String():
 			user.FileName = value
 		}
 		users[userPrefix] = user
@@ -73,6 +86,5 @@ func CheckCredentials(apiKey string) error {
 		return fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
 
-	fmt.Printf(" Credentials are valid.\n")
 	return nil
 }

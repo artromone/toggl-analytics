@@ -21,6 +21,7 @@ func GetLastWeekTimeEntries(apiKey string) (int, error) {
 }
 
 func GetTimeEntries(apiKey string, startDate, endDate time.Time) (int, error) {
+    // TODO one format
 	query := fmt.Sprintf("start_date=%s&end_date=%s", startDate.Format("2006-01-02"), endDate.Format("2006-01-02"))
 	url := fmt.Sprintf("https://api.track.toggl.com/api/v9/me/time_entries?%s", query)
 

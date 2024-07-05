@@ -20,6 +20,7 @@ func main() {
 			fmt.Printf(" Error checking credentials: %v\n", err)
 			continue
 		}
+		fmt.Printf(" Credentials are valid.\n")
 
 		weekTotal, err := GetLastWeekTimeEntries(apiKey)
 		if err != nil {
@@ -44,5 +45,5 @@ func main() {
 	//
 	// GenerateTablePdf(columns, rows)
 
-    // TODO create pdf in pdf/ dir, gitignore
+	// TODO create pdf in pdf/ dir, gitignore
 }
