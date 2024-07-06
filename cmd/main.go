@@ -27,10 +27,12 @@ func main() {
 		fmt.Printf(" Credentials are valid.\n")
 	}
 
+	fmt.Println()
+
 	table := make(report.Table)
 
 	for _, credentials := range users {
-		weekTotal, err := api.GetLastWeekTimeEntries(&table, &credentials)
+		weekTotal, totalPay, err := api.GetLastWeekTimeEntries(&table, &credentials)
 		if err != nil {
 			fmt.Printf("Error getting time entry: %v\n", err)
 			continue
@@ -39,8 +41,10 @@ func main() {
 		hours := weekTotal / 3600
 		minutes := (weekTotal % 3600) / 60
 
-		fmt.Printf("User have worked %d h %d min.\n", hours, minutes)
+		fmt.Printf("%s have worked %d h %d min, need to pay %d.\n", credentials.FileName, hours, minutes, totalPay)
 	}
+	
+    fmt.Println()
 
 	columns, rows, colWidths := pdf.GeneratePdfData(table)
 	outputPath := "reports/table.pdf"
@@ -49,4 +53,3 @@ func main() {
 		fmt.Printf("Error generating PDF: %v\n", err)
 	}
 }
-

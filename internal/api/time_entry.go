@@ -26,14 +26,14 @@ type ClientEntry struct {
 	Name string `json:"name"`
 }
 
-func GetLastWeekTimeEntries(table *report.Table, credentials *types.UserCredentials) (int, error) {
+func GetLastWeekTimeEntries(table *report.Table, credentials *types.UserCredentials) (int, int, error) {
 	thisMonday := time.Now().AddDate(0, 0, -int(time.Now().Weekday())+1)
 	lastMonday := thisMonday.AddDate(0, 0, -7)
 	lastSunday := thisMonday.AddDate(0, 0, -1)
 
 	timeEntries, err := GetTimeEntries(credentials, lastMonday, lastSunday)
 	if err != nil {
-		return 0, err
+		return 0, 0, err
 	}
 
 	return ProcessTimeEntries(table, credentials, timeEntries)
@@ -52,9 +52,11 @@ func GetTimeEntries(credentials *types.UserCredentials, startDate, endDate time.
 	return timeEntries, nil
 }
 
-func ProcessTimeEntries(table *report.Table, credentials *types.UserCredentials, timeEntries []TimeEntry) (int, error) {
+func ProcessTimeEntries(table *report.Table, credentials *types.UserCredentials, timeEntries []TimeEntry) (int, int, error) {
 	tasks := make(map[string]int)
 	totalDuration := 0
+
+    totalPay := 0
 
 	for _, entry := range timeEntries {
 		totalDuration += entry.Duration
@@ -75,6 +77,8 @@ func ProcessTimeEntries(table *report.Table, credentials *types.UserCredentials,
 		}
 		pay *= float64(entry.Duration) / 3600
 		pay = RoundToPrecision(pay, 0)
+
+        totalPay += int(pay)
 
 		if rowId, exists := tasks[entry.Task]; exists {
 			table.UpdateRow(rowId, "Sum", table.Get(rowId, "Sum").(float64)+pay)
@@ -97,7 +101,7 @@ func ProcessTimeEntries(table *report.Table, credentials *types.UserCredentials,
 		}
 	}
 
-	return totalDuration, nil
+	return totalDuration, totalPay, nil
 }
 
 func RoundToPrecision(value float64, precision int) float64 {
