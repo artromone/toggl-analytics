@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"net/http"
 	"os"
 	"strings"
 	"togglparser/internal/api"
@@ -75,10 +76,14 @@ func GetAllUserCredentials() map[string]types.UserCredentials {
 func CheckCredentials(apiKey string) error {
 	url := "https://api.track.toggl.com/api/v9/me"
 
-	err := api.NewFetcher().FetchData(url, apiKey, nil)
+	resp, err := api.MakeRequest(http.MethodGet, url, apiKey)
 	if err != nil {
 		return fmt.Errorf("Error sending request: %v", err)
 	}
+	defer resp.Body.Close()
 
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("Unexpected status code: %d", resp.StatusCode)
+	}
 	return nil
 }
