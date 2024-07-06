@@ -39,17 +39,28 @@ func (t Table) GetDimensions() (int, int) {
 }
 
 func (t Table) Get(id int, column string) interface{} {
+	row, exists := t[id]
+	if !exists {
+		fmt.Printf("Row with ID %d not found\n", id)
+		return nil
+	}
+
+	if _, ok := row[column]; !ok {
+		fmt.Printf("Column %s not found]n", column)
+		return nil
+	}
+
 	return t[id][column]
-} // TODO
+}
 
 func (t Table) UpdateRow(id int, column string, value interface{}) error {
 	row, exists := t[id]
 	if !exists {
-		return fmt.Errorf("row with ID %d not found", id)
+		return fmt.Errorf("Row with ID %d not found", id)
 	}
 
 	if _, ok := row[column]; !ok {
-		return fmt.Errorf("column %s not found", column)
+		return fmt.Errorf("Column %s not found", column)
 	}
 
 	row[column] = value
@@ -59,16 +70,3 @@ func (t Table) UpdateRow(id int, column string, value interface{}) error {
 func (t Table) DeleteRow(id int) {
 	delete(t, id)
 }
-
-// func (t Table) PrintTable() {
-// 	fmt.Printf("%-5s %-10s %-20s %-10s %-15s %-15s\n", "ID", "User", "Duration", "Sum", "Client", "Task")
-// 	for id, row := range t {
-// 		fmt.Printf("%-5d %-10s %-20s %-10.2f %-15s %-15s\n",
-// 			id,
-// 			row["User"].(string),
-// 			row["Duration"].(int),
-// 			row["Sum"].(float64),
-// 			row["Client"].(string),
-// 			row["Task"].(string))
-// 	}
-// }

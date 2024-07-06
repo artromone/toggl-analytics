@@ -39,8 +39,6 @@ func main() {
 		fmt.Printf("User have worked %d h %d min.\n", hours, minutes)
 	}
 
-	// table.PrintTable()
-
 	columns := []string{"ID", "User", "Duration", "Sum", "Client", "Task", "Vikunja link"}
 
 	rows := [][]string{}
@@ -65,7 +63,6 @@ func main() {
 		if !ok {
 			continue
 		}
-		// TODO link together
 		taskTrackerId, ok := row["Vikunja link"].(int)
 		if !ok {
 			continue
