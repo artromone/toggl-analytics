@@ -53,7 +53,7 @@ func CreatePdfReport(columns []string, rows [][]string, colWidths map[int]float6
 				}
 
 				linkStr = fmt.Sprintf("http://%s/tasks/%d", serverAddress, i)
-				value = tr(fmt.Sprintf("Перейти (id:%d)", i))
+				value = tr(fmt.Sprintf("Перейти к %d", i))
 			}
 
 			pdf.CellFormat(width, rowHeight, value, "1", 0, "", false, 0, linkStr)
