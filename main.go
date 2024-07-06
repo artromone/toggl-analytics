@@ -90,7 +90,7 @@ func main() {
 		3: 15.0,
 		4: 25.0,
 		5: 70.0,
-		6: 20.0,
+		6: 25.0,
 	}
 
 	GenerateTablePdf(columns, rows, colWidths)

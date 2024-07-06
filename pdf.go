@@ -3,7 +3,9 @@ package main
 import (
 	"fmt"
 	"github.com/jung-kurt/gofpdf"
+	"os"
 	"sort"
+	"strconv"
 )
 
 func GenerateTablePdf(columns []string, rows [][]string, colWidths map[int]float64) {
@@ -30,6 +32,8 @@ func GenerateTablePdf(columns []string, rows [][]string, colWidths map[int]float
 		return rows[i][0] < rows[j][0] // Sort by ID
 	})
 
+	serverAddress := os.Getenv("SERVER_ADDRESS")
+
 	for _, row := range rows {
 		for i, col := range row {
 			width, exists := colWidths[i]
@@ -38,12 +42,20 @@ func GenerateTablePdf(columns []string, rows [][]string, colWidths map[int]float
 			}
 
 			linkStr := ""
-            isLastColumn := i == len(row)-1
+			value := tr(col)
+
+			isLastColumn := i == len(row)-1
 			if isLastColumn {
-				linkStr = "http://example.com/" + tr(col)
+				i, err := strconv.Atoi(col)
+				if err != nil {
+					continue
+				}
+
+				linkStr = fmt.Sprintf("http://%s/tasks/%d", serverAddress, i)
+				value = tr(fmt.Sprintf("Перейти (id:%d)", i))
 			}
 
-			pdf.CellFormat(width, rowHeight, tr(col), "1", 0, "", false, 0, linkStr)
+			pdf.CellFormat(width, rowHeight, value, "1", 0, "", false, 0, linkStr)
 		}
 		pdf.Ln(rowHeight)
 	}
