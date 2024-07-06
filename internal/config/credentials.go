@@ -77,7 +77,7 @@ func CheckCredentials(apiKey string) error {
 
 	err := api.NewFetcher().FetchData(url, apiKey, nil)
 	if err != nil {
-		return fmt.Errorf("error sending request: %v", err)
+		return fmt.Errorf("Error sending request: %v", err)
 	}
 
 	return nil

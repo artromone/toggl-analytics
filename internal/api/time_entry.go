@@ -45,7 +45,6 @@ func GetTimeEntries(credentials *types.UserCredentials, startDate, endDate time.
 	url := fmt.Sprintf("https://api.track.toggl.com/api/v9/me/time_entries?%s", query)
 
 	var timeEntries []TimeEntry
-
 	if err := NewFetcher().FetchData(url, credentials.APIKey, &timeEntries); err != nil {
 		return nil, err
 	}
@@ -85,6 +84,7 @@ func ProcessTimeEntries(table *report.Table, credentials *types.UserCredentials,
 			if len(entry.TaskTrackerID) != 0 {
 				taskTrackerId = entry.TaskTrackerID[0]
 			}
+
 			rowId := table.AddRow(
 				credentials.FileName,
 				entry.Duration,

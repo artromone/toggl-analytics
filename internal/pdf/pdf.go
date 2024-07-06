@@ -71,30 +71,30 @@ func CreatePdfReport(columns []string, rows [][]string, colWidths map[int]float6
 }
 
 func GeneratePdfData(table report.Table) (columns []string, rows [][]string, colWidths map[int]float64) {
-	columns = []string{"ID", "User", "Duration", "Sum", "Client", "Task", "Vikunja link"}
+	columns = []string{"ID", report.UserKey, report.DurationKey, report.SumKey, report.ClientKey, report.TaskKey, report.VikunjaLinkKey}
 
 	for id, row := range table {
-		user, ok := row["User"].(string)
+		user, ok := row[report.UserKey].(string)
 		if !ok {
 			continue
 		}
-		duration, ok := row["Duration"].(int)
+		duration, ok := row[report.DurationKey].(int)
 		if !ok {
 			continue
 		}
-		sum, ok := row["Sum"].(float64)
+		sum, ok := row[report.SumKey].(float64)
 		if !ok || sum == 0 {
 			continue
 		}
-		client, ok := row["Client"].(string)
+		client, ok := row[report.ClientKey].(string)
 		if !ok {
 			continue
 		}
-		task, ok := row["Task"].(string)
+		task, ok := row[report.TaskKey].(string)
 		if !ok {
 			continue
 		}
-		taskTrackerId, ok := row["Vikunja link"].(int)
+		taskTrackerId, ok := row[report.TaskKey].(int)
 		if !ok {
 			continue
 		}

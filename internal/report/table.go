@@ -4,17 +4,26 @@ import (
 	"fmt"
 )
 
+const (
+	UserKey        = "User"
+	DurationKey    = "Duration"
+	SumKey         = "Sum"
+	ClientKey      = "Client"
+	TaskKey        = "Task"
+	VikunjaLinkKey = "Vikunja link"
+)
+
 type TableRow map[string]interface{}
 type Table map[int]TableRow
 
 func (t Table) AddRowById(id int, user string, duration int, sum float64, client, task string, taskTrackerId int) {
 	t[id] = TableRow{
-		"User":         user,
-		"Duration":     duration,
-		"Sum":          sum,
-		"Client":       client,
-		"Task":         task,
-		"Vikunja link": taskTrackerId,
+		UserKey:        user,
+		DurationKey:    duration,
+		SumKey:         sum,
+		ClientKey:      client,
+		TaskKey:        task,
+		VikunjaLinkKey: taskTrackerId,
 	}
 }
 
