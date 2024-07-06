@@ -1,10 +1,12 @@
-package main
+package api
 
 import (
 	"fmt"
 	"math"
 	"strconv"
 	"time"
+	"togglparser/internal/report"
+	"togglparser/internal/types"
 )
 
 type TimeEntry struct {
@@ -24,7 +26,7 @@ type ClientEntry struct {
 	Name string `json:"name"`
 }
 
-func GetLastWeekTimeEntries(table *Table, credentials *UserCredentials) (int, error) {
+func GetLastWeekTimeEntries(table *report.Table, credentials *types.UserCredentials) (int, error) {
 	thisMonday := time.Now().AddDate(0, 0, -int(time.Now().Weekday())+1)
 	lastMonday := thisMonday.AddDate(0, 0, -7)
 	lastSunday := thisMonday.AddDate(0, 0, -1)
@@ -37,20 +39,21 @@ func GetLastWeekTimeEntries(table *Table, credentials *UserCredentials) (int, er
 	return ProcessTimeEntries(table, credentials, timeEntries)
 }
 
-func GetTimeEntries(credentials *UserCredentials, startDate, endDate time.Time) ([]TimeEntry, error) {
+func GetTimeEntries(credentials *types.UserCredentials, startDate, endDate time.Time) ([]TimeEntry, error) {
 	apiDateFormat := "2006-01-02"
 	query := fmt.Sprintf("start_date=%s&end_date=%s&meta=1&include_sharing=1", startDate.Format(apiDateFormat), endDate.Format(apiDateFormat))
 	url := fmt.Sprintf("https://api.track.toggl.com/api/v9/me/time_entries?%s", query)
 
 	var timeEntries []TimeEntry
-	if err := fetchData(url, credentials.APIKey, &timeEntries); err != nil {
+
+	if err := NewFetcher().FetchData(url, credentials.APIKey, &timeEntries); err != nil {
 		return nil, err
 	}
 
 	return timeEntries, nil
 }
 
-func ProcessTimeEntries(table *Table, credentials *UserCredentials, timeEntries []TimeEntry) (int, error) {
+func ProcessTimeEntries(table *report.Table, credentials *types.UserCredentials, timeEntries []TimeEntry) (int, error) {
 	tasks := make(map[string]int)
 	totalDuration := 0
 
@@ -105,7 +108,7 @@ func RoundToPrecision(value float64, precision int) float64 {
 func GetProjectClient(workspaceID, projectID int, apiKey string) (int, error) {
 	url := fmt.Sprintf("https://api.track.toggl.com/api/v9/workspaces/%d/projects/%d", workspaceID, projectID)
 	var entry ProjectEntry
-	if err := fetchData(url, apiKey, &entry); err != nil {
+	if err := NewFetcher().FetchData(url, apiKey, &entry); err != nil {
 		return 0, err
 	}
 	return entry.Client, nil
@@ -114,7 +117,7 @@ func GetProjectClient(workspaceID, projectID int, apiKey string) (int, error) {
 func GetClientName(workspaceID, clientID int, apiKey string) (string, error) {
 	url := fmt.Sprintf("https://api.track.toggl.com/api/v9/workspaces/%d/clients/%d", workspaceID, clientID)
 	var clientEntry ClientEntry
-	if err := fetchData(url, apiKey, &clientEntry); err != nil {
+	if err := NewFetcher().FetchData(url, apiKey, &clientEntry); err != nil {
 		return "", err
 	}
 	return clientEntry.Name, nil

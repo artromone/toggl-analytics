@@ -1,18 +1,12 @@
-package main
+package config
 
 import (
 	"fmt"
-	"net/http"
 	"os"
 	"strings"
+	"togglparser/internal/api"
+	"togglparser/internal/types"
 )
-
-type UserCredentials struct {
-	APIKey      string
-	WorkspaceID string
-	FileName    string
-	PayPerHour  string
-}
 
 type CredentialField int
 
@@ -27,9 +21,9 @@ func (d CredentialField) String() string {
 	return [...]string{"API_KEY", "WORKSPACE_ID", "USER_NAME", "PAY_PER_HOUR"}[d]
 }
 
-func GetUserCredentials(prefix string) UserCredentials {
+func GetUserCredentials(prefix string) types.UserCredentials {
 	prefix += "_"
-	return UserCredentials{
+	return types.UserCredentials{
 		APIKey:      os.Getenv(prefix + apiKey.String()),
 		WorkspaceID: os.Getenv(prefix + workspaceId.String()),
 		FileName:    os.Getenv(prefix + username.String()),
@@ -37,8 +31,8 @@ func GetUserCredentials(prefix string) UserCredentials {
 	}
 }
 
-func GetAllUserCredentials() map[string]UserCredentials {
-	users := make(map[string]UserCredentials)
+func GetAllUserCredentials() map[string]types.UserCredentials {
+	users := make(map[string]types.UserCredentials)
 
 	for _, env := range os.Environ() {
 		kv := strings.SplitN(env, "=", 2)
@@ -58,7 +52,7 @@ func GetAllUserCredentials() map[string]UserCredentials {
 		attribute := parts[1]
 
 		if _, exists := users[userPrefix]; !exists {
-			users[userPrefix] = UserCredentials{}
+			users[userPrefix] = types.UserCredentials{}
 		}
 
 		user := users[userPrefix]
@@ -79,16 +73,11 @@ func GetAllUserCredentials() map[string]UserCredentials {
 }
 
 func CheckCredentials(apiKey string) error {
-	method, url := http.MethodGet, "https://api.track.toggl.com/api/v9/me"
+	url := "https://api.track.toggl.com/api/v9/me"
 
-	resp, err := MakeRequest(method, url, apiKey)
+	err := api.NewFetcher().FetchData(url, apiKey, nil)
 	if err != nil {
 		return fmt.Errorf("error sending request: %v", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
 
 	return nil
