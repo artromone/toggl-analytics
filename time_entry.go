@@ -10,10 +10,11 @@ import (
 )
 
 type TimeEntry struct {
-	Duration  int    `json:"duration"`
-	Project   int    `json:"project_id"`
-	Workspace int    `json:"workspace_id"`
-	Task      string `json:"description"`
+	Duration      int    `json:"duration"`
+	Project       int    `json:"project_id"`
+	Workspace     int    `json:"workspace_id"`
+	Task          string `json:"description"`
+	TaskTrackerId []int  `json:"tag_ids"`
 }
 
 type ProjectEntry struct {
@@ -76,7 +77,18 @@ func GetTimeEntries(table *Table, credentials *UserCredentials, startDate, endDa
 			table.UpdateRow(rowId, "Sum", table.Get(rowId, "Sum").(float64)+pay)
 			table.UpdateRow(rowId, "Duration", table.Get(rowId, "Duration").(int)+entry.Duration)
 		} else {
-			rowId := table.AddRow(credentials.FileName, entry.Duration, pay, clientName, entry.Task)
+			taskTrackerId := -1
+			if len(entry.TaskTrackerId) != 0 {
+				taskTrackerId = entry.TaskTrackerId[0]
+			}
+			rowId := table.AddRow(
+				credentials.FileName,
+				entry.Duration,
+				pay,
+				clientName,
+				entry.Task,
+				taskTrackerId,
+			)
 			tasks[entry.Task] = rowId
 		}
 	}
@@ -120,5 +132,3 @@ func GetClientName(workspaceID, clientID int, apiKey string) (string, error) {
 
 	return clientEntry.Name, nil
 }
-
-

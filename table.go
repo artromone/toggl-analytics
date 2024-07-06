@@ -7,19 +7,20 @@ import (
 type TableRow map[string]interface{}
 type Table map[int]TableRow
 
-func (t Table) AddRowById(id int, user string, duration int, sum float64, client, task string) {
+func (t Table) AddRowById(id int, user string, duration int, sum float64, client, task string, taskTrackerId int) {
 	t[id] = TableRow{
-		"User":     user,
-		"Duration": duration,
-		"Sum":      sum,
-		"Client":   client,
-		"Task":     task,
+		"User":         user,
+		"Duration":     duration,
+		"Sum":          sum,
+		"Client":       client,
+		"Task":         task,
+		"Vikunja link": taskTrackerId,
 	}
 }
 
-func (t Table) AddRow(user string, duration int, sum float64, client, task string) int {
+func (t Table) AddRow(user string, duration int, sum float64, client, task string, taskTrackerId int) int {
 	rows, _ := t.GetDimensions()
-	t.AddRowById(rows+1, user, duration, sum, client, task)
+	t.AddRowById(rows+1, user, duration, sum, client, task, taskTrackerId)
 	return rows + 1
 }
 

@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strconv"
 )
 
 func main() {
@@ -40,7 +41,7 @@ func main() {
 
 	// table.PrintTable()
 
-	columns := []string{"ID", "User", "Duration", "Sum", "Client", "Task"}
+	columns := []string{"ID", "User", "Duration", "Sum", "Client", "Task", "Vikunja link"}
 
 	rows := [][]string{}
 	for id, row := range table {
@@ -63,9 +64,22 @@ func main() {
 		task, ok := row["Task"].(string)
 		if !ok {
 			continue
-		} // TODO link together
+		}
+		// TODO link together
+		taskTrackerId, ok := row["Vikunja link"].(int)
+		if !ok {
+			continue
+		}
 
-		newRow := []string{fmt.Sprintf("%d", id), user, DurationToHHMMSS(duration), fmt.Sprintf("%.2f", sum), project, task}
+		newRow := []string{
+			fmt.Sprintf("%d", id),
+			user,
+			DurationToHHMMSS(duration),
+			fmt.Sprintf("%.2f", sum),
+			project,
+			task,
+			strconv.Itoa(taskTrackerId),
+		}
 		rows = append(rows, newRow)
 	}
 
@@ -76,6 +90,7 @@ func main() {
 		3: 15.0,
 		4: 25.0,
 		5: 70.0,
+		6: 20.0,
 	}
 
 	GenerateTablePdf(columns, rows, colWidths)

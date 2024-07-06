@@ -36,7 +36,14 @@ func GenerateTablePdf(columns []string, rows [][]string, colWidths map[int]float
 			if !exists {
 				width = 20.0
 			}
-			pdf.CellFormat(width, rowHeight, tr(col), "1", 0, "", false, 0, "")
+
+			linkStr := ""
+            isLastColumn := i == len(row)-1
+			if isLastColumn {
+				linkStr = "http://example.com/" + tr(col)
+			}
+
+			pdf.CellFormat(width, rowHeight, tr(col), "1", 0, "", false, 0, linkStr)
 		}
 		pdf.Ln(rowHeight)
 	}
