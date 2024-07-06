@@ -44,7 +44,7 @@ func main() {
 
 	columns, rows, colWidths := pdf.GeneratePdfData(table)
 	outputPath := "reports/table.pdf"
-	err := pdf.CreatePdfReport(columns, rows, colWidths, outputPath)
+	err := pdf.CreateDetailedPdfReport(columns, rows, colWidths, outputPath)
 	if err != nil {
 		fmt.Printf("Error generating PDF: %v\n", err)
 	}

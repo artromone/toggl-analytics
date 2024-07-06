@@ -9,7 +9,7 @@ import (
 	"togglparser/internal/report"
 )
 
-func CreatePdfReport(columns []string, rows [][]string, colWidths map[int]float64, outputPath string) error {
+func CreateDetailedPdfReport(columns []string, rows [][]string, colWidths map[int]float64, outputPath string) error {
 	pdf := gofpdf.New("P", "mm", "A4", "font/")
 
 	pdf.AddFont("Helvetica", "", "helvetica_1251.json")
@@ -113,10 +113,10 @@ func GeneratePdfData(table report.Table) (columns []string, rows [][]string, col
 
 	colWidths = map[int]float64{
 		0: 5.0,
-		1: 20.0,
+		1: 30.0,
 		2: 15.0,
 		3: 15.0,
-		4: 25.0,
+		4: 30.0,
 		5: 70.0,
 		6: 25.0,
 	}
