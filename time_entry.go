@@ -1,10 +1,8 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"math"
-	"net/http"
 	"strconv"
 	"time"
 )
@@ -14,7 +12,7 @@ type TimeEntry struct {
 	Project       int    `json:"project_id"`
 	Workspace     int    `json:"workspace_id"`
 	Task          string `json:"description"`
-	TaskTrackerId []int  `json:"tag_ids"`
+	TaskTrackerID []int  `json:"tag_ids"`
 }
 
 type ProjectEntry struct {
@@ -31,28 +29,31 @@ func GetLastWeekTimeEntries(table *Table, credentials *UserCredentials) (int, er
 	lastMonday := thisMonday.AddDate(0, 0, -7)
 	lastSunday := thisMonday.AddDate(0, 0, -1)
 
-	return GetTimeEntries(table, credentials, lastMonday, lastSunday)
+	timeEntries, err := GetTimeEntries(credentials, lastMonday, lastSunday)
+	if err != nil {
+		return 0, err
+	}
+
+	return ProcessTimeEntries(table, credentials, timeEntries)
 }
 
-func GetTimeEntries(table *Table, credentials *UserCredentials, startDate, endDate time.Time) (int, error) {
+func GetTimeEntries(credentials *UserCredentials, startDate, endDate time.Time) ([]TimeEntry, error) {
 	apiDateFormat := "2006-01-02"
 	query := fmt.Sprintf("start_date=%s&end_date=%s&meta=1&include_sharing=1", startDate.Format(apiDateFormat), endDate.Format(apiDateFormat))
 	url := fmt.Sprintf("https://api.track.toggl.com/api/v9/me/time_entries?%s", query)
 
-	resp, err := MakeRequest(http.MethodGet, url, credentials.APIKey)
-	if err != nil {
-		return 0, err
-	}
-	defer resp.Body.Close()
-
 	var timeEntries []TimeEntry
-	if err := json.NewDecoder(resp.Body).Decode(&timeEntries); err != nil {
-		return 0, err
+	if err := fetchData(url, credentials.APIKey, &timeEntries); err != nil {
+		return nil, err
 	}
 
-	tasks := make(map[string]int)
+	return timeEntries, nil
+}
 
+func ProcessTimeEntries(table *Table, credentials *UserCredentials, timeEntries []TimeEntry) (int, error) {
+	tasks := make(map[string]int)
 	totalDuration := 0
+
 	for _, entry := range timeEntries {
 		totalDuration += entry.Duration
 
@@ -78,8 +79,8 @@ func GetTimeEntries(table *Table, credentials *UserCredentials, startDate, endDa
 			table.UpdateRow(rowId, "Duration", table.Get(rowId, "Duration").(int)+entry.Duration)
 		} else {
 			taskTrackerId := -1
-			if len(entry.TaskTrackerId) != 0 {
-				taskTrackerId = entry.TaskTrackerId[0]
+			if len(entry.TaskTrackerID) != 0 {
+				taskTrackerId = entry.TaskTrackerID[0]
 			}
 			rowId := table.AddRow(
 				credentials.FileName,
@@ -103,32 +104,18 @@ func RoundToPrecision(value float64, precision int) float64 {
 
 func GetProjectClient(workspaceID, projectID int, apiKey string) (int, error) {
 	url := fmt.Sprintf("https://api.track.toggl.com/api/v9/workspaces/%d/projects/%d", workspaceID, projectID)
-	resp, err := MakeRequest(http.MethodGet, url, apiKey)
-	if err != nil {
-		return 0, err
-	}
-	defer resp.Body.Close()
-
 	var entry ProjectEntry
-	if err := json.NewDecoder(resp.Body).Decode(&entry); err != nil {
+	if err := fetchData(url, apiKey, &entry); err != nil {
 		return 0, err
 	}
-
 	return entry.Client, nil
 }
 
 func GetClientName(workspaceID, clientID int, apiKey string) (string, error) {
 	url := fmt.Sprintf("https://api.track.toggl.com/api/v9/workspaces/%d/clients/%d", workspaceID, clientID)
-	resp, err := MakeRequest(http.MethodGet, url, apiKey)
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
-
 	var clientEntry ClientEntry
-	if err := json.NewDecoder(resp.Body).Decode(&clientEntry); err != nil {
+	if err := fetchData(url, apiKey, &clientEntry); err != nil {
 		return "", err
 	}
-
 	return clientEntry.Name, nil
 }
