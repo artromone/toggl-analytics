@@ -3,6 +3,7 @@ package api
 import (
 	"fmt"
 	"math"
+	"os"
 	"strconv"
 	"time"
 	"togglparser/internal/report"
@@ -25,6 +26,8 @@ type ProjectEntry struct {
 type ClientEntry struct {
 	Name string `json:"name"`
 }
+
+var ClientsPay = map[string]float64{}
 
 func GetLastWeekTimeEntries(table *report.Table, credentials *types.UserCredentials) (int, int, error) {
 	thisMonday := time.Now().AddDate(0, 0, -int(time.Now().Weekday())+1)
@@ -56,7 +59,8 @@ func ProcessTimeEntries(table *report.Table, credentials *types.UserCredentials,
 	tasks := make(map[string]int)
 	totalDuration := 0
 
-    totalPay := 0
+	totalPay := 0
+	clientPayStr := os.Getenv("CLIENT_PAY")
 
 	for _, entry := range timeEntries {
 		totalDuration += entry.Duration
@@ -78,7 +82,16 @@ func ProcessTimeEntries(table *report.Table, credentials *types.UserCredentials,
 		pay *= float64(entry.Duration) / 3600
 		pay = RoundToPrecision(pay, 0)
 
-        totalPay += int(pay)
+		totalPay += int(pay)
+
+		clientPay, err := strconv.ParseFloat(clientPayStr, 64)
+		if err != nil {
+			panic("НАПИШИТЕ АРТЕМУ ЧТО ВСЕ СЛОМАЛОСЬ")
+		}
+		if len(clientName) != 0 {
+			ClientsPay[clientName] += clientPay * float64(entry.Duration) / 3600
+			// RoundToPrecision(clientsPay[clientName], 0)
+		}
 
 		if rowId, exists := tasks[entry.Task]; exists {
 			table.UpdateRow(rowId, "Sum", table.Get(rowId, "Sum").(float64)+pay)
