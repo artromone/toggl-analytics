@@ -71,7 +71,7 @@ func CreatePdfReport(columns []string, rows [][]string, colWidths map[int]float6
 }
 
 func GeneratePdfData(table report.Table) (columns []string, rows [][]string, colWidths map[int]float64) {
-	columns = []string{"ID", report.UserKey, report.DurationKey, report.SumKey, report.ClientKey, report.TaskKey, report.VikunjaLinkKey}
+	columns = []string{"ID", report.UserKey, report.DurationKey, report.SumKey, report.ClientKey, report.TaskKey, report.TaskTrackerKey}
 
 	for id, row := range table {
 		user, ok := row[report.UserKey].(string)
@@ -94,7 +94,7 @@ func GeneratePdfData(table report.Table) (columns []string, rows [][]string, col
 		if !ok {
 			continue
 		}
-		taskTrackerId, ok := row[report.TaskKey].(int)
+		taskTrackerId, ok := row[report.TaskTrackerKey].(int)
 		if !ok {
 			continue
 		}

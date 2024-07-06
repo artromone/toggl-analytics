@@ -10,7 +10,7 @@ const (
 	SumKey         = "Sum"
 	ClientKey      = "Client"
 	TaskKey        = "Task"
-	VikunjaLinkKey = "Vikunja link"
+	TaskTrackerKey = "Vikunja link"
 )
 
 type TableRow map[string]interface{}
@@ -23,7 +23,7 @@ func (t Table) AddRowById(id int, user string, duration int, sum float64, client
 		SumKey:         sum,
 		ClientKey:      client,
 		TaskKey:        task,
-		VikunjaLinkKey: taskTrackerId,
+		TaskTrackerKey: taskTrackerId,
 	}
 }
 
