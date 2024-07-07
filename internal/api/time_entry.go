@@ -3,6 +3,7 @@ package api
 import (
 	"fmt"
 	"math"
+	"os"
 	"strconv"
 	"sync"
 	"time"
@@ -37,11 +38,12 @@ var clientCache = struct {
 	m map[string]ClientEntry
 }{m: make(map[string]ClientEntry)}
 
-func GetLastWeekTimeEntries(table *report.Table, credentials *types.UserCredentials) (int, error) {
+var ClientsPay = map[string]float64{}
+
+func GetLastWeekTimeEntries(table *report.Table, credentials *types.UserCredentials) (int, int, error) {
 	location, err := time.LoadLocation("Europe/Moscow")
 	if err != nil {
 		return 0, err
-
 	}
 
 	now := time.Now().In(location)
@@ -56,7 +58,7 @@ func GetLastWeekTimeEntries(table *report.Table, credentials *types.UserCredenti
 
 	timeEntries, err := GetTimeEntries(credentials, lastMonday, lastSunday)
 	if err != nil {
-		return 0, err
+		return 0, 0, err
 	}
 
 	return ProcessTimeEntries(table, credentials, timeEntries)
@@ -75,9 +77,12 @@ func GetTimeEntries(credentials *types.UserCredentials, startDate, endDate time.
 	return timeEntries, nil
 }
 
-func ProcessTimeEntries(table *report.Table, credentials *types.UserCredentials, timeEntries []TimeEntry) (int, error) {
+func ProcessTimeEntries(table *report.Table, credentials *types.UserCredentials, timeEntries []TimeEntry) (int, int, error) {
 	tasks := make(map[string]int)
 	totalDuration := 0
+
+	totalPay := 0
+	clientPayStr := os.Getenv("CLIENT_PAY")
 
 	for _, entry := range timeEntries {
 		totalDuration += entry.Duration
@@ -98,6 +103,17 @@ func ProcessTimeEntries(table *report.Table, credentials *types.UserCredentials,
 		}
 		pay *= float64(entry.Duration) / 3600
 		pay = RoundToPrecision(pay, 0)
+
+		totalPay += int(pay)
+
+		clientPay, err := strconv.ParseFloat(clientPayStr, 64)
+		if err != nil {
+			panic("НАПИШИТЕ АРТЕМУ ЧТО ВСЕ СЛОМАЛОСЬ")
+		}
+		if len(clientName) != 0 {
+			ClientsPay[clientName] += clientPay * float64(entry.Duration) / 3600
+			// RoundToPrecision(clientsPay[clientName], 0)
+		}
 
 		if rowId, exists := tasks[entry.Task]; exists {
 			table.UpdateRow(rowId, "Sum", table.Get(rowId, "Sum").(float64)+pay)
@@ -120,7 +136,7 @@ func ProcessTimeEntries(table *report.Table, credentials *types.UserCredentials,
 		}
 	}
 
-	return totalDuration, nil
+	return totalDuration, totalPay, nil
 }
 
 func RoundToPrecision(value float64, precision int) float64 {
