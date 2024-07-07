@@ -43,7 +43,7 @@ var ClientsPay = map[string]float64{}
 func GetLastWeekTimeEntries(table *report.Table, credentials *types.UserCredentials) (int, int, error) {
 	location, err := time.LoadLocation("Europe/Moscow")
 	if err != nil {
-		return 0, err
+		return 0, 0, err
 	}
 
 	now := time.Now().In(location)
