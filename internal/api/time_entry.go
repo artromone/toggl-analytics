@@ -38,7 +38,19 @@ var clientCache = struct {
 }{m: make(map[string]ClientEntry)}
 
 func GetLastWeekTimeEntries(table *report.Table, credentials *types.UserCredentials) (int, error) {
-	thisMonday := time.Now().AddDate(0, 0, -int(time.Now().Weekday())+1)
+	location, err := time.LoadLocation("Europe/Moscow")
+	if err != nil {
+		return 0, err
+
+	}
+
+	now := time.Now().In(location)
+
+	thisMonday := now
+	for thisMonday.Weekday() != time.Monday {
+		thisMonday = thisMonday.AddDate(0, 0, -1)
+	}
+
 	lastMonday := thisMonday.AddDate(0, 0, -7)
 	lastSunday := thisMonday.AddDate(0, 0, -1)
 
