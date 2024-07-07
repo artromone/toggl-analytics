@@ -5,6 +5,7 @@ import (
 	"math"
 	"os"
 	"strconv"
+	"sync"
 	"time"
 	"togglparser/internal/report"
 	"togglparser/internal/types"
@@ -27,10 +28,31 @@ type ClientEntry struct {
 	Name string `json:"name"`
 }
 
+var projectCache = struct {
+	sync.RWMutex
+	m map[string]ProjectEntry
+}{m: make(map[string]ProjectEntry)}
+
+var clientCache = struct {
+	sync.RWMutex
+	m map[string]ClientEntry
+}{m: make(map[string]ClientEntry)}
+
 var ClientsPay = map[string]float64{}
 
 func GetLastWeekTimeEntries(table *report.Table, credentials *types.UserCredentials) (int, int, error) {
-	thisMonday := time.Now().AddDate(0, 0, -int(time.Now().Weekday())+1)
+	location, err := time.LoadLocation("Europe/Moscow")
+	if err != nil {
+		return 0, err
+	}
+
+	now := time.Now().In(location)
+
+	thisMonday := now
+	for thisMonday.Weekday() != time.Monday {
+		thisMonday = thisMonday.AddDate(0, 0, -1)
+	}
+
 	lastMonday := thisMonday.AddDate(0, 0, -7)
 	lastSunday := thisMonday.AddDate(0, 0, -1)
 
@@ -123,19 +145,42 @@ func RoundToPrecision(value float64, precision int) float64 {
 }
 
 func GetProjectClient(workspaceID, projectID int, apiKey string) (int, error) {
+	key := fmt.Sprintf("%d-%d", workspaceID, projectID)
+	projectCache.RLock()
+	entry, ok := projectCache.m[key]
+	projectCache.RUnlock()
+
+	if ok {
+		return entry.Client, nil
+	}
+
 	url := fmt.Sprintf("https://api.track.toggl.com/api/v9/workspaces/%d/projects/%d", workspaceID, projectID)
-	var entry ProjectEntry
-	if err := NewFetcher().FetchData(url, apiKey, &entry); err != nil {
+	var newEntry ProjectEntry
+	if err := NewFetcher().FetchData(url, apiKey, &newEntry); err != nil {
 		return 0, err
 	}
-	return entry.Client, nil
+
+	projectCache.Lock()
+	defer projectCache.Unlock()
+	projectCache.m[key] = newEntry
+
+	return newEntry.Client, nil
 }
 
 func GetClientName(workspaceID, clientID int, apiKey string) (string, error) {
+	key := fmt.Sprintf("%d-%d", workspaceID, clientID)
+	clientCache.RLock()
+	entry, ok := clientCache.m[key]
+	clientCache.RUnlock()
+
+	if ok {
+		return entry.Name, nil
+	}
+
 	url := fmt.Sprintf("https://api.track.toggl.com/api/v9/workspaces/%d/clients/%d", workspaceID, clientID)
-	var clientEntry ClientEntry
-	if err := NewFetcher().FetchData(url, apiKey, &clientEntry); err != nil {
+	var newEntry ClientEntry
+	if err := NewFetcher().FetchData(url, apiKey, &newEntry); err != nil {
 		return "", err
 	}
-	return clientEntry.Name, nil
+	return newEntry.Name, nil
 }
