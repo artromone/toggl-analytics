@@ -40,6 +40,11 @@ var clientCache = struct {
 
 var ClientsPay = map[string]float64{}
 
+func Bod(t time.Time) time.Time {
+	year, month, day := t.Date()
+	return time.Date(year, month, day, 0, 0, 0, 0, t.Location())
+}
+
 func GetLastWeekTimeEntries(table *report.Table, credentials *types.UserCredentials) (int, int, error) {
 	location, err := time.LoadLocation("Europe/Moscow")
 	if err != nil {
@@ -47,14 +52,13 @@ func GetLastWeekTimeEntries(table *report.Table, credentials *types.UserCredenti
 	}
 
 	now := time.Now().In(location)
-
-	thisMonday := now
+	thisMonday := Bod(now)
 	for thisMonday.Weekday() != time.Monday {
 		thisMonday = thisMonday.AddDate(0, 0, -1)
 	}
 
 	lastMonday := thisMonday.AddDate(0, 0, -7)
-	lastSunday := thisMonday.AddDate(0, 0, -1)
+	lastSunday := thisMonday
 
 	timeEntries, err := GetTimeEntries(credentials, lastMonday, lastSunday)
 	if err != nil {
