@@ -57,6 +57,9 @@ func GetLastWeekTimeEntries(table *report.Table, credentials *types.UserCredenti
 		thisMonday = thisMonday.AddDate(0, 0, -1)
 	}
 
+	// fmt.Println(thisMonday.Format("2006-01-02"))
+	// thisMonday = thisMonday.AddDate(0, 0, -7) // last week
+
 	lastMonday := thisMonday.AddDate(0, 0, -7)
 	lastSunday := thisMonday
 
@@ -91,11 +94,12 @@ func ProcessTimeEntries(table *report.Table, credentials *types.UserCredentials,
 	for _, entry := range timeEntries {
 		totalDuration += entry.Duration
 
+		fmt.Println(entry)
+
 		clientId, err := GetProjectClient(entry.Workspace, entry.Project, credentials.APIKey)
 		if err != nil {
-			continue
+			fmt.Println("!!! BAD CLIENT_ID !!!")
 		}
-
 		clientName, err := GetClientName(entry.Workspace, clientId, credentials.APIKey)
 		if err != nil {
 			clientName = ""
@@ -112,7 +116,7 @@ func ProcessTimeEntries(table *report.Table, credentials *types.UserCredentials,
 
 		clientPay, err := strconv.ParseFloat(clientPayStr, 64)
 		if err != nil {
-			panic("НАПИШИТЕ АРТЕМУ ЧТО ВСЕ СЛОМАЛОСЬ")
+			panic("No CLIENT_PAY entry in .env")
 		}
 		if len(clientName) != 0 {
 			ClientsPay[clientName] += clientPay * float64(entry.Duration) / 3600
