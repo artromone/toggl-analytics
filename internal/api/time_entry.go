@@ -17,21 +17,20 @@ type TimeEntry = types.TimeEntry
 
 var projectCache sync.Map
 var clientCache sync.Map
-
 var ClientsPay = map[string]float64{}
+// type AppContext struct {
+//     ProjectCache sync.Map
+//     ClientCache  sync.Map
+//     ClientsPay   map[string]float64
+// }
+
+const ApiDateFormat = "2006-01-02"
 
 func Bod(t time.Time) time.Time {
 	return t.Truncate(24 * time.Hour)
 }
 
 func StartOfWeek(t time.Time) time.Time {
-	// year, month, day := t.Date()
-	// firstDayOfWeek := time.Date(year, month, day, 0, 0, 0, 0, t.Location())
-	// for firstDayOfWeek.Weekday() != time.Monday {
-	// 	firstDayOfWeek = firstDayOfWeek.AddDate(0, 0, -1)
-	// }
-	// return firstDayOfWeek
-
 	offset := (int(t.Weekday()) - int(time.Monday) + 7) % 7
 	return t.AddDate(0, 0, -offset).Truncate(24 * time.Hour)
 }
@@ -57,8 +56,7 @@ func GetLastWeekTimeEntries(table *report.Table, credentials *types.UserCredenti
 }
 
 func GetTimeEntries(credentials *types.UserCredentials, startDate, endDate time.Time) ([]TimeEntry, error) {
-	apiDateFormat := "2006-01-02"
-	query := fmt.Sprintf("start_date=%s&end_date=%s&meta=1&include_sharing=1", startDate.Format(apiDateFormat), endDate.Format(apiDateFormat))
+	query := fmt.Sprintf("start_date=%s&end_date=%s&meta=1&include_sharing=1", startDate.Format(ApiDateFormat), endDate.Format(ApiDateFormat))
 	url := fmt.Sprintf("https://api.track.toggl.com/api/v9/me/time_entries?%s", query)
 
 	var timeEntries []TimeEntry
@@ -81,8 +79,7 @@ func ProcessTimeEntries(table *report.Table, credentials *types.UserCredentials,
 
 		clientId, err := GetProjectClient(entry.Workspace, entry.Project, credentials.APIKey)
 		if err != nil {
-			fmt.Println(entry)
-			fmt.Println("!!! BAD CLIENT_ID !!!")
+			fmt.Printf("Error getting clientId for project %d: %v", entry.Project, err)
 		}
 		clientName, err := GetClientName(entry.Workspace, clientId, credentials.APIKey)
 		if err != nil {
@@ -138,19 +135,18 @@ func RoundToPrecision(value float64, precision int) float64 {
 	return math.Round(value*multiplier) / multiplier
 }
 
-// func GetCachedDataOrFetch[T any](cache *sync.Map, key string, fetchFunc func() (T, error)) (T, error) {
-// 	if value, ok := cache.Load(key); ok {
-// 		return value.(T), nil
-// 	}
+// func GetFromCacheOrFetch[T any](cache *sync.Map, key string, fetchFunc func() (T, error)) (T, error) {
+//     if value, ok := cache.Load(key); ok {
+//         return value.(T), nil
+//     }
 //
-// 	result, err := fetchFunc()
-// 	if err != nil {
-// 		var zero T
-// 		return zero, err
-// 	}
+//     result, err := fetchFunc()
+//     if err != nil {
+//         return *new(T), err
+//     }
 //
-// 	cache.Store(key, result)
-// 	return result, nil
+//     cache.Store(key, result)
+//     return result, nil
 // }
 
 func GetProjectClient(workspaceID, projectID int, apiKey string) (int, error) {
