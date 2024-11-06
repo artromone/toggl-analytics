@@ -77,7 +77,7 @@ func GetTimeEntries(credentials *types.UserCredentials, startDate, endDate time.
 	url := fmt.Sprintf("https://api.track.toggl.com/api/v9/me/time_entries?%s", query)
 
 	var timeEntries []TimeEntry
-	if err := NewFetcher().FetchData(url, credentials.APIKey, &timeEntries); err != nil {
+	if err := NewFetcher(credentials.APIKey).FetchData(url, &timeEntries); err != nil {
 		return nil, err
 	}
 
@@ -164,7 +164,7 @@ func GetProjectClient(workspaceID, projectID int, apiKey string) (int, error) {
 
 	url := fmt.Sprintf("https://api.track.toggl.com/api/v9/workspaces/%d/projects/%d", workspaceID, projectID)
 	var newEntry ProjectEntry
-	if err := NewFetcher().FetchData(url, apiKey, &newEntry); err != nil {
+	if err := NewFetcher(apiKey).FetchData(url, &newEntry); err != nil {
 		return 0, err
 	}
 
@@ -187,7 +187,7 @@ func GetClientName(workspaceID, clientID int, apiKey string) (string, error) {
 
 	url := fmt.Sprintf("https://api.track.toggl.com/api/v9/workspaces/%d/clients/%d", workspaceID, clientID)
 	var newEntry ClientEntry
-	if err := NewFetcher().FetchData(url, apiKey, &newEntry); err != nil {
+	if err := NewFetcher(apiKey).FetchData(url, &newEntry); err != nil {
 		return "", err
 	}
 	return newEntry.Name, nil

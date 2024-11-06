@@ -15,11 +15,12 @@ func main() {
 	}
 
 	users := config.GetAllUserCredentials()
-
 	for _, credentials := range users {
 		fmt.Printf("Checking credentials for %s...", credentials.FileName)
 
-		err := config.CheckCredentials(credentials.APIKey)
+		f := api.NewFetcher(credentials.APIKey)
+
+		err := config.CheckCredentials(f, credentials.APIKey)
 		if err != nil {
 			fmt.Printf(" Error checking credentials: %v\n", err)
 			fmt.Println("Remove or fix invalid credentials to continue.")

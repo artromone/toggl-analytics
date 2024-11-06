@@ -4,40 +4,47 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 	"togglparser/internal/types"
 )
 
-type fetcher struct{}
+type fetcher struct {
+	client *http.Client
+	apiKey string
+}
 
-func (f *fetcher) FetchData(url, apiKey string, v interface{}) error {
-	resp, err := MakeRequest(http.MethodGet, url, apiKey)
+func NewFetcher(apiKey string) types.Fetcher {
+	return &fetcher{
+		client: &http.Client{Timeout: 10 * time.Second},
+		apiKey: apiKey,
+	}
+}
+
+func (f *fetcher) FetchData(url string, v interface{}) error {
+	resp, err := f.MakeRequest(http.MethodGet, url)
 	if err != nil {
 		return err
 	}
+
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
+		resp.Body.Close()
 		return fmt.Errorf("Failed to fetch data, status code: %d", resp.StatusCode)
 	}
 
 	return json.NewDecoder(resp.Body).Decode(v)
 }
 
-func NewFetcher() types.Fetcher {
-	return &fetcher{}
-}
-
-func MakeRequest(method, url, apiKey string) (*http.Response, error) {
+func (f *fetcher) MakeRequest(method, url string) (*http.Response, error) {
 	req, err := http.NewRequest(method, url, nil)
 	if err != nil {
 		return nil, err
 	}
-
 	req.Header.Set("Content-Type", "application/json; charset=utf-8")
-	req.SetBasicAuth(apiKey, "api_token")
+	req.SetBasicAuth(f.apiKey, "api_token")
 
-	client := &http.Client{}
-	resp, err := client.Do(req)
+	resp, err := f.client.Do(req)
 	if err != nil {
 		return nil, err
 	}

@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"os"
 	"strings"
-	"togglparser/internal/api"
 	"togglparser/internal/types"
 )
 
@@ -73,10 +72,10 @@ func GetAllUserCredentials() map[string]types.UserCredentials {
 	return users
 }
 
-func CheckCredentials(apiKey string) error {
+func CheckCredentials(r types.Requester, apiKey string) error {
 	url := "https://api.track.toggl.com/api/v9/me"
 
-	resp, err := api.MakeRequest(http.MethodGet, url, apiKey)
+	resp, err := r.MakeRequest(http.MethodGet, url)
 	if err != nil {
 		return fmt.Errorf("Error sending request: %v", err)
 	}

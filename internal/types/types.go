@@ -1,5 +1,9 @@
 package types
 
+import (
+	"net/http"
+)
+
 type UserCredentials struct {
 	APIKey      string
 	WorkspaceID string
@@ -8,5 +12,10 @@ type UserCredentials struct {
 }
 
 type Fetcher interface {
-	FetchData(url, apiKey string, v interface{}) error
+	FetchData(url string, v interface{}) error
+	MakeRequest(method, url string) (*http.Response, error)
+}
+
+type Requester interface {
+	MakeRequest(method, url string) (*http.Response, error)
 }
