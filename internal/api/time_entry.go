@@ -15,21 +15,25 @@ type ProjectEntry = types.ProjectEntry
 type ClientEntry = types.ClientEntry
 type TimeEntry = types.TimeEntry
 
-var projectCache = struct {
-	sync.RWMutex
-	m map[string]ProjectEntry
-}{m: make(map[string]ProjectEntry)}
-
-var clientCache = struct {
-	sync.RWMutex
-	m map[string]ClientEntry
-}{m: make(map[string]ClientEntry)}
+var projectCache sync.Map
+var clientCache sync.Map
 
 var ClientsPay = map[string]float64{}
 
 func Bod(t time.Time) time.Time {
-	year, month, day := t.Date()
-	return time.Date(year, month, day, 0, 0, 0, 0, t.Location())
+	return t.Truncate(24 * time.Hour)
+}
+
+func StartOfWeek(t time.Time) time.Time {
+	// year, month, day := t.Date()
+	// firstDayOfWeek := time.Date(year, month, day, 0, 0, 0, 0, t.Location())
+	// for firstDayOfWeek.Weekday() != time.Monday {
+	// 	firstDayOfWeek = firstDayOfWeek.AddDate(0, 0, -1)
+	// }
+	// return firstDayOfWeek
+
+	offset := (int(t.Weekday()) - int(time.Monday) + 7) % 7
+	return t.AddDate(0, 0, -offset).Truncate(24 * time.Hour)
 }
 
 func GetLastWeekTimeEntries(table *report.Table, credentials *types.UserCredentials) (int, int, error) {
@@ -39,13 +43,7 @@ func GetLastWeekTimeEntries(table *report.Table, credentials *types.UserCredenti
 	}
 
 	now := time.Now().In(location)
-	thisMonday := Bod(now)
-	for thisMonday.Weekday() != time.Monday {
-		thisMonday = thisMonday.AddDate(0, 0, -1)
-	}
-
-	// fmt.Println(thisMonday.Format("2006-01-02"))
-	thisMonday = thisMonday.AddDate(0, 0, -7) // last week
+	thisMonday := StartOfWeek(now).AddDate(0, 0, -7) // last week
 
 	lastMonday := thisMonday.AddDate(0, 0, -7)
 	lastSunday := thisMonday
@@ -95,8 +93,7 @@ func ProcessTimeEntries(table *report.Table, credentials *types.UserCredentials,
 		if err != nil {
 			continue
 		}
-		pay *= float64(entry.Duration) / 3600
-		pay = RoundToPrecision(pay, 0)
+		pay *= DurationToHours(entry.Duration)
 
 		totalPay += int(pay)
 
@@ -105,8 +102,7 @@ func ProcessTimeEntries(table *report.Table, credentials *types.UserCredentials,
 			return 0, 0, fmt.Errorf("CLIENT_PAY must be a valid number: %v", err)
 		}
 		if len(clientName) != 0 {
-			ClientsPay[clientName] += clientPay * float64(entry.Duration) / 3600
-			// RoundToPrecision(clientsPay[clientName], 0)
+			ClientsPay[clientName] += clientPay * DurationToHours(entry.Duration)
 		}
 
 		if rowId, exists := tasks[entry.Task]; exists {
@@ -133,18 +129,34 @@ func ProcessTimeEntries(table *report.Table, credentials *types.UserCredentials,
 	return totalDuration, totalPay, nil
 }
 
+func DurationToHours(duration int) float64 {
+	return RoundToPrecision(float64(duration)/3600, 2)
+}
+
 func RoundToPrecision(value float64, precision int) float64 {
 	multiplier := math.Pow(10, float64(precision))
 	return math.Round(value*multiplier) / multiplier
 }
 
+// func GetCachedDataOrFetch[T any](cache *sync.Map, key string, fetchFunc func() (T, error)) (T, error) {
+// 	if value, ok := cache.Load(key); ok {
+// 		return value.(T), nil
+// 	}
+//
+// 	result, err := fetchFunc()
+// 	if err != nil {
+// 		var zero T
+// 		return zero, err
+// 	}
+//
+// 	cache.Store(key, result)
+// 	return result, nil
+// }
+
 func GetProjectClient(workspaceID, projectID int, apiKey string) (int, error) {
 	key := fmt.Sprintf("%d-%d", workspaceID, projectID)
-	projectCache.RLock()
-	entry, ok := projectCache.m[key]
-	projectCache.RUnlock()
-
-	if ok {
+	if value, ok := projectCache.Load(key); ok {
+		entry := value.(ProjectEntry)
 		return entry.Client, nil
 	}
 
@@ -154,20 +166,15 @@ func GetProjectClient(workspaceID, projectID int, apiKey string) (int, error) {
 		return 0, err
 	}
 
-	projectCache.Lock()
-	defer projectCache.Unlock()
-	projectCache.m[key] = newEntry
+	projectCache.Store(key, newEntry)
 
 	return newEntry.Client, nil
 }
 
 func GetClientName(workspaceID, clientID int, apiKey string) (string, error) {
 	key := fmt.Sprintf("%d-%d", workspaceID, clientID)
-	clientCache.RLock()
-	entry, ok := clientCache.m[key]
-	clientCache.RUnlock()
-
-	if ok {
+	if value, ok := clientCache.Load(key); ok {
+		entry := value.(ClientEntry)
 		return entry.Name, nil
 	}
 
@@ -176,5 +183,8 @@ func GetClientName(workspaceID, clientID int, apiKey string) (string, error) {
 	if err := NewFetcher(apiKey).FetchData(url, &newEntry); err != nil {
 		return "", err
 	}
+
+	clientCache.Store(key, newEntry)
+
 	return newEntry.Name, nil
 }
