@@ -11,22 +11,9 @@ import (
 	"togglparser/internal/types"
 )
 
-type TimeEntry struct {
-	Duration      int    `json:"duration"`
-	Project       int    `json:"project_id"`
-	Workspace     int    `json:"workspace_id"`
-	Task          string `json:"description"`
-	TaskTrackerID []int  `json:"tag_ids"`
-}
-
-type ProjectEntry struct {
-	Name   string `json:"name"`
-	Client int    `json:"client_id"`
-}
-
-type ClientEntry struct {
-	Name string `json:"name"`
-}
+type ProjectEntry = types.ProjectEntry
+type ClientEntry = types.ClientEntry
+type TimeEntry = types.TimeEntry
 
 var projectCache = struct {
 	sync.RWMutex
@@ -94,10 +81,9 @@ func ProcessTimeEntries(table *report.Table, credentials *types.UserCredentials,
 	for _, entry := range timeEntries {
 		totalDuration += entry.Duration
 
-
 		clientId, err := GetProjectClient(entry.Workspace, entry.Project, credentials.APIKey)
 		if err != nil {
-            fmt.Println(entry)
+			fmt.Println(entry)
 			fmt.Println("!!! BAD CLIENT_ID !!!")
 		}
 		clientName, err := GetClientName(entry.Workspace, clientId, credentials.APIKey)
