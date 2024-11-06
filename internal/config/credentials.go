@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"togglparser/internal/types"
 )
@@ -15,10 +16,11 @@ const (
 	workspaceId
 	username
 	payPerHour
+	clientPay
 )
 
 func (d CredentialField) String() string {
-	return [...]string{"API_KEY", "WORKSPACE_ID", "USER_NAME", "PAY_PER_HOUR"}[d]
+	return [...]string{"API_KEY", "WORKSPACE_ID", "USER_NAME", "PAY_PER_HOUR", "CLIENT_PAY"}[d]
 }
 
 func GetUserCredentials(prefix string) types.UserCredentials {
@@ -73,6 +75,7 @@ func GetAllUserCredentials() map[string]types.UserCredentials {
 }
 
 func CheckCredentials(r types.Requester, apiKey string) error {
+	// 1 auth
 	url := "https://api.track.toggl.com/api/v9/me"
 
 	resp, err := r.MakeRequest(http.MethodGet, url)
@@ -84,5 +87,12 @@ func CheckCredentials(r types.Requester, apiKey string) error {
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("Unexpected status code: %d", resp.StatusCode)
 	}
+
+	// 2 check client
+	_, exists := os.LookupEnv("CLIENT_PAY")
+	if !exists {
+		return fmt.Errorf("CLIENT_PAY environment variable is not set")
+	}
+
 	return nil
 }

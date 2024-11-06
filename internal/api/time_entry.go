@@ -102,7 +102,7 @@ func ProcessTimeEntries(table *report.Table, credentials *types.UserCredentials,
 
 		clientPay, err := strconv.ParseFloat(clientPayStr, 64)
 		if err != nil {
-			panic("No CLIENT_PAY entry in .env")
+			return 0, 0, fmt.Errorf("CLIENT_PAY must be a valid number: %v", err)
 		}
 		if len(clientName) != 0 {
 			ClientsPay[clientName] += clientPay * float64(entry.Duration) / 3600
